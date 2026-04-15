@@ -1,0 +1,45 @@
+name: CD Homol
+
+on:
+  push:
+    branches:
+      - homol
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-homol
+  cancel-in-progress: false
+
+jobs:
+  deploy-homol:
+    runs-on: ubuntu-latest
+    environment: homol
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Configure Databricks authentication
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HOMOL }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_HOMOL }}
+        run: |
+          if [ -z "$DATABRICKS_HOST" ] || [ -z "$DATABRICKS_TOKEN" ]; then
+            echo "Missing secrets DATABRICKS_HOST_HOMOL or DATABRICKS_TOKEN_HOMOL" >&2
+            exit 1
+          fi
+          databricks auth profiles
+
+      - name: Validate bundle
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HOMOL }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_HOMOL }}
+        run: databricks bundle validate -t homol
+
+      - name: Deploy bundle (homol)
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HOMOL }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_HOMOL }}
+        run: databricks bundle deploy -t homol

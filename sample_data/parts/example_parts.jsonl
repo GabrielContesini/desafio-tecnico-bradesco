@@ -1,0 +1,5 @@
+{"logical_file_name":"SISTEMA=TJSP|TABELA=clientes|DT_REF=2026-04-14|PART=0001.json","payload":{"customer_id":1,"name":"Alice"}}
+{"logical_file_name":"SISTEMA=TJSP|TABELA=clientes|DT_REF=2026-04-14|PART=0002.json","payload":{"customer_id":2,"name":"Bruno"}}
+{"logical_file_name":"SISTEMA=TJSP|TABELA=clientes|DT_REF=2026-04-14|PART=0003.json","payload":{"customer_id":3,"name":"Carla"}}
+{"logical_file_name":"SISTEMA=TJSP|TABELA=processos|DT_REF=2026-04-15|PART=0001.json","payload":{"process_id":1001}}
+{"logical_file_name":"SISTEMA=TJSP|TABELA=clientes|DT_REF=2026-04-14|PART=0001.json","payload":{"customer_id":1,"name":"Alice"}}

@@ -1,0 +1,120 @@
+bundle:
+  name: ingestion-orchestrator
+
+variables:
+  catalog:
+    default: main
+  schema:
+    default: ops_ingestion_dev
+  timeout_minutes:
+    default: "30"
+
+targets:
+  dev:
+    default: true
+    workspace:
+      root_path: /Workspace/Shared/ingestion-orchestrator/${bundle.target}
+  homol:
+    workspace:
+      root_path: /Workspace/Shared/ingestion-orchestrator/${bundle.target}
+  prod:
+    workspace:
+      root_path: /Workspace/Shared/ingestion-orchestrator/${bundle.target}
+
+resources:
+  jobs:
+    ingest_landing_job:
+      name: ingestion-orchestrator-${bundle.target}-ingest
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: ingest_landing
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/01_ingest_landing.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
+
+    evaluate_groups_job:
+      name: ingestion-orchestrator-${bundle.target}-evaluate
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: evaluate_groups
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/02_evaluate_groups.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
+
+    dispatch_groups_job:
+      name: ingestion-orchestrator-${bundle.target}-dispatch
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: dispatch_groups
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/03_dispatch_groups.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
+
+    orchestrator_demo_job:
+      name: ingestion-orchestrator-${bundle.target}-demo
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: generate_demo_files
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/10_generate_demo_files.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
+        - task_key: ingest
+          depends_on:
+            - task_key: generate_demo_files
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/01_ingest_landing.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
+        - task_key: evaluate
+          depends_on:
+            - task_key: ingest
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/02_evaluate_groups.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
+        - task_key: dispatch
+          depends_on:
+            - task_key: evaluate
+          notebook_task:
+            source: WORKSPACE
+            notebook_path: ./notebooks/03_dispatch_groups.py
+            base_parameters:
+              env: ${bundle.target}
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              group_timeout_minutes: ${var.timeout_minutes}
+              project_root: /Workspace/${workspace.file_path}
