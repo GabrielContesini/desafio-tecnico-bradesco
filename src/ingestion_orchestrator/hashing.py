@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any
+
+from pyspark.sql import DataFrame
 
 from ingestion_orchestrator.parsing import build_group_key
 
@@ -40,7 +41,7 @@ def make_audit_key(event_type: str, group_key: str | None, file_business_key: st
     return sha256_hex(f"{event_type}|{group_key or '-'}|{file_business_key or '-'}|{dedupe}")
 
 
-def spark_file_business_key_expr(df: Any) -> Any:
+def spark_file_business_key_expr(df: DataFrame) -> DataFrame:
     from pyspark.sql import functions as F
 
     parse_error_key = F.sha2(
@@ -77,7 +78,7 @@ def spark_file_business_key_expr(df: Any) -> Any:
     )
 
 
-def spark_dispatch_key_expr(df: Any) -> Any:
+def spark_dispatch_key_expr(df: DataFrame) -> DataFrame:
     from pyspark.sql import functions as F
 
     return df.withColumn("dispatch_key", F.sha2(F.col("group_key"), 256))

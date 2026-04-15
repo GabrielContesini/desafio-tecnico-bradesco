@@ -4,8 +4,9 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 from urllib.parse import unquote
+
+from pyspark.sql import DataFrame
 
 
 FILE_NAME_REGEX = (
@@ -82,7 +83,7 @@ def parse_manifest_payload(payload: bytes | str | None) -> tuple[int | None, str
     return expected, None
 
 
-def with_parsed_metadata(raw_df: Any, timezone: str = "UTC") -> Any:
+def with_parsed_metadata(raw_df: DataFrame, timezone: str = "UTC") -> DataFrame:
     """Attach parsed columns to a Spark DataFrame produced by binaryFile/Auto Loader."""
 
     from pyspark.sql import functions as F
@@ -94,12 +95,12 @@ def with_parsed_metadata(raw_df: Any, timezone: str = "UTC") -> Any:
     parsed_df = (
         raw_df.withColumn("file_path", F.col("path"))
         .withColumn("file_name", file_name_col)
-            .withColumn("logical_file_name", F.expr("url_decode(file_name)"))
-            .withColumn("system_name", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 1))
-            .withColumn("table_name", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 2))
-            .withColumn("dt_ref_str", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 3))
-            .withColumn("part_number_str", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 5))
-            .withColumn("is_manifest", F.col("logical_file_name").rlike(r"MANIFEST\.json$"))
+        .withColumn("logical_file_name", F.expr("url_decode(file_name)"))
+        .withColumn("system_name", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 1))
+        .withColumn("table_name", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 2))
+        .withColumn("dt_ref_str", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 3))
+        .withColumn("part_number_str", F.regexp_extract(F.col("logical_file_name"), FILE_NAME_REGEX, 5))
+        .withColumn("is_manifest", F.col("logical_file_name").rlike(r"MANIFEST\.json$"))
         .withColumn("dt_ref", F.to_date(F.col("dt_ref_str"), "yyyy-MM-dd"))
         .withColumn(
             "part_number",
