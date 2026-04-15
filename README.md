@@ -322,3 +322,37 @@ Recomendação:
 
 - usar GitHub Environments `dev`, `homol`, `prod`;
 - exigir aprovação manual no environment `prod`.
+
+## 17) Evidências de execução (capturas da validação manual)
+
+As capturas da execução em Databricks (rodadas em `ops_ingestion_dev`) comprovam:
+
+1. **Jobs criados manualmente**
+   - `ingestion-orchestrator-dev-demo-manual`
+   - `ingestion-orchestrator-dev-ingest-manual`
+   - `ingestion-orchestrator-dev-evaluate-manual`
+   - `ingestion-orchestrator-dev-dispatch-manual`
+
+2. **Execução ponta a ponta bem-sucedida**
+   - Run do job `ingestion-orchestrator-dev-demo-manual` com tasks:
+     - `generate_demo_files` -> `Succeeded`
+     - `ingest` -> `Succeeded`
+     - `evaluate` -> `Succeeded`
+     - `dispatch` -> `Succeeded`
+
+3. **Comportamento idempotente em rerun**
+   - Na execução mostrada, o `ingest` retornou `raw_events: 0`, `inserted: 0`, `duplicates: 0`.
+   - O `dispatch` retornou `ready_groups: 0`, `dispatched: 0`, `skipped_already_dispatched: 0`.
+   - Esse comportamento é esperado quando o pipeline é executado novamente sem novos arquivos elegíveis.
+
+4. **Estado de grupos e dispatch**
+   - `TJSP|clientes|2026-04-14` aparece como `DISPATCHED` com `ready_reason = ALL_PARTS`.
+   - Tabela de dispatch contém `dispatch_reason = ALL_PARTS` para esse grupo.
+
+5. **Auditoria operacional**
+   - Contagem de eventos mostra:
+     - `FILE_DUPLICATE_IGNORED = 7`
+     - `MANIFEST_CONFLICT = 1`
+   - Isso confirma tratamento de duplicidade e registro de conflito de manifest.
+
+> Observação: a evidência de `TIMEOUT` pode não aparecer em execuções imediatas de rerun, pois depende da janela temporal (`group_timeout_minutes`).
