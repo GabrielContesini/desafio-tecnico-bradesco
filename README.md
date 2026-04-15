@@ -325,34 +325,51 @@ Recomendação:
 
 ## 17) Evidências de execução (capturas da validação manual)
 
-As capturas da execução em Databricks (rodadas em `ops_ingestion_dev`) comprovam:
+As capturas abaixo correspondem à validação em Databricks para o ambiente `dev` (`main.ops_ingestion_dev`).
 
-1. **Jobs criados manualmente**
-   - `ingestion-orchestrator-dev-demo-manual`
-   - `ingestion-orchestrator-dev-ingest-manual`
-   - `ingestion-orchestrator-dev-evaluate-manual`
-   - `ingestion-orchestrator-dev-dispatch-manual`
+### 17.1 Jobs criados manualmente
 
-2. **Execução ponta a ponta bem-sucedida**
-   - Run do job `ingestion-orchestrator-dev-demo-manual` com tasks:
-     - `generate_demo_files` -> `Succeeded`
-     - `ingest` -> `Succeeded`
-     - `evaluate` -> `Succeeded`
-     - `dispatch` -> `Succeeded`
+![Jobs criados no Databricks](docs/evidence/01_jobs_created.png)
 
-3. **Comportamento idempotente em rerun**
-   - Na execução mostrada, o `ingest` retornou `raw_events: 0`, `inserted: 0`, `duplicates: 0`.
-   - O `dispatch` retornou `ready_groups: 0`, `dispatched: 0`, `skipped_already_dispatched: 0`.
-   - Esse comportamento é esperado quando o pipeline é executado novamente sem novos arquivos elegíveis.
+### 17.2 Run do job demo com sucesso
 
-4. **Estado de grupos e dispatch**
-   - `TJSP|clientes|2026-04-14` aparece como `DISPATCHED` com `ready_reason = ALL_PARTS`.
-   - Tabela de dispatch contém `dispatch_reason = ALL_PARTS` para esse grupo.
+![Runs do job demo](docs/evidence/02_demo_runs_success.png)
 
-5. **Auditoria operacional**
-   - Contagem de eventos mostra:
-     - `FILE_DUPLICATE_IGNORED = 7`
-     - `MANIFEST_CONFLICT = 1`
-   - Isso confirma tratamento de duplicidade e registro de conflito de manifest.
+### 17.3 Task `ingest` concluída
 
-> Observação: a evidência de `TIMEOUT` pode não aparecer em execuções imediatas de rerun, pois depende da janela temporal (`group_timeout_minutes`).
+![Detalhe da task ingest](docs/evidence/03_task_ingest_success.png)
+
+### 17.4 Task `evaluate` concluída
+
+![Detalhe da task evaluate](docs/evidence/04_task_evaluate_success.png)
+
+### 17.5 Task `dispatch` concluída
+
+![Detalhe da task dispatch](docs/evidence/05_task_dispatch_success.png)
+
+### 17.6 Estado dos grupos (`ops_ingestion_groups`)
+
+![Estado dos grupos](docs/evidence/06_sql_groups_state.png)
+
+### 17.7 Dispatch registrado (`ops_ingestion_dispatch`)
+
+![Dispatch por grupo](docs/evidence/07_sql_dispatch_state.png)
+
+### 17.8 Auditoria - duplicidades ignoradas
+
+![FILE_DUPLICATE_IGNORED](docs/evidence/08_sql_audit_duplicate_ignored.png)
+
+### 17.9 Auditoria - duplicidades e conflito de manifest
+
+![FILE_DUPLICATE_IGNORED e MANIFEST_CONFLICT](docs/evidence/09_sql_audit_duplicate_and_manifest_conflict.png)
+
+### 17.10 Interpretação das evidências
+
+1. Os jobs de ingestão, avaliação e dispatch foram criados e executados com sucesso.
+2. O job de demo (`generate_demo_files -> ingest -> evaluate -> dispatch`) apresentou execuções bem-sucedidas.
+3. O rerun mostrou comportamento idempotente esperado:
+   - `ingest` sem novos registros (`raw_events: 0`).
+   - `dispatch` sem novo disparo (`ready_groups: 0`, `dispatched: 0`).
+4. A auditoria registrou eventos de duplicidade e conflito de manifest de forma explícita.
+
+> Observação: a evidência de `TIMEOUT` pode não aparecer em reruns imediatos, pois depende da janela temporal configurada (`group_timeout_minutes`).
