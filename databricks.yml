@@ -14,12 +14,18 @@ targets:
     default: true
     workspace:
       root_path: /Workspace/Shared/ingestion-orchestrator/${bundle.target}
+    variables:
+      schema: ops_ingestion_dev
   homol:
     workspace:
       root_path: /Workspace/Shared/ingestion-orchestrator/${bundle.target}
+    variables:
+      schema: ops_ingestion_homol
   prod:
     workspace:
       root_path: /Workspace/Shared/ingestion-orchestrator/${bundle.target}
+    variables:
+      schema: ops_ingestion_prod
 
 resources:
   jobs:
