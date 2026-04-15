@@ -33,7 +33,9 @@ class DispatchService:
 
         ready_with_key = spark_dispatch_key_expr(ready_groups)
         existing_dispatch = self.spark.table(self.config.dispatch_table).select(
-            "dispatch_key", "group_key", "dispatched_at"
+            F.col("dispatch_key"),
+            F.col("group_key").alias("already_dispatched_group_key"),
+            F.col("dispatched_at").alias("already_dispatched_at"),
         )
 
         to_dispatch = ready_with_key.join(
@@ -41,7 +43,26 @@ class DispatchService:
             "dispatch_key",
             "left_anti",
         )
-        skipped = ready_with_key.join(existing_dispatch, "dispatch_key", "inner")
+        skipped = (
+            ready_with_key.alias("r")
+            .join(
+                existing_dispatch.alias("d"),
+                F.col("r.dispatch_key") == F.col("d.dispatch_key"),
+                "inner",
+            )
+            .select(
+                F.col("r.dispatch_key"),
+                F.col("r.group_key"),
+                F.col("r.system_name"),
+                F.col("r.table_name"),
+                F.col("r.dt_ref"),
+                F.col("r.ready_reason"),
+                F.col("r.expected_parts"),
+                F.col("r.received_parts"),
+                F.col("r.incomplete_flag"),
+                F.col("d.already_dispatched_at").alias("dispatched_at"),
+            )
+        )
 
         dispatch_payload = (
             self._attach_file_snapshot(to_dispatch)
