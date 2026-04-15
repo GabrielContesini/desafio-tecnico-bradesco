@@ -42,7 +42,6 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
 
     evaluate_groups_job:
       name: ingestion-orchestrator-${bundle.target}-evaluate
@@ -57,7 +56,6 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
 
     dispatch_groups_job:
       name: ingestion-orchestrator-${bundle.target}-dispatch
@@ -72,7 +70,6 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
 
     orchestrator_demo_job:
       name: ingestion-orchestrator-${bundle.target}-demo
@@ -87,7 +84,6 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
         - task_key: ingest
           depends_on:
             - task_key: generate_demo_files
@@ -99,7 +95,6 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
         - task_key: evaluate
           depends_on:
             - task_key: ingest
@@ -111,7 +106,6 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
         - task_key: dispatch
           depends_on:
             - task_key: evaluate
@@ -123,4 +117,3 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
               group_timeout_minutes: ${var.timeout_minutes}
-              project_root: /Workspace/${workspace.file_path}
